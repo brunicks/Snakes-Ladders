@@ -8,8 +8,6 @@ import random
 import time
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
-
-# Importa a classe SnakesLadders do jogo
 from SnakesLadders import SnakesLadders
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
