@@ -1,6 +1,6 @@
 from PIL import Image
 
-# Abre a imagem
+# Abre a imagem e devolve seu tamanho em pixels
 image_path = "board.jpg"
 try:
     with Image.open(image_path) as img:
