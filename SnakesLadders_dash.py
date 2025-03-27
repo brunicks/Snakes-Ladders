@@ -9,6 +9,7 @@ import time
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from SnakesLadders import SnakesLadders
+from styles import CUSTOM_STYLES
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.server
@@ -19,77 +20,10 @@ app.index_string = '''
 <html>
     <head>
         {%metas%}
-        <title>Snakes and Ladders</title>
-        {%favicon%}
+        <title>Cobras e Escadas</title>
         {%css%}
         <style>
-            .player-info-overlay {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                z-index: 1000;
-                background: rgba(255,255,255,0.8);
-                padding: 10px;
-                border-radius: 5px;
-            }
-            .player-info {
-                margin: 5px;
-                padding: 5px;
-                border-radius: 3px;
-            }
-            .player1 { background: rgba(255,0,0,0.2); }
-            .player2 { background: rgba(0,0,255,0.2); }
-            .current-turn {
-                font-size: 1.5em;
-                font-weight: bold;
-                text-align: center;
-                padding: 10px;
-                border-radius: 5px;
-            }
-            .player-position {
-                text-align: center;
-                padding: 5px;
-                margin: 5px;
-                border-radius: 3px;
-            }
-            .positions-display {
-                display: flex;
-                justify-content: space-around;
-            }
-                      /* Estilos da seção de regras */
-            .card-header h4 {
-                color: #2c3e50;
-            }
-            
-            .card-body h5 {
-                color: #34495e;
-                border-bottom: 2px solid #eee;
-                padding-bottom: 8px;
-            }
-            
-            .card-body ul {
-                list-style-type: none;
-                padding-left: 0;
-            }
-            
-            .card-body li {
-                margin-bottom: 12px;
-                padding-left: 25px;
-                position: relative;
-            }
-            
-            .card-body li:before {
-                position: absolute;
-                left: 0;
-                top: 2px;
-            }
-            
-            .card-body small {
-                color: #666;
-                font-style: italic;
-                display: block;
-                margin-top: 5px;
-            }
+            ''' + CUSTOM_STYLES + '''
         </style>
     </head>
     <body>
@@ -199,41 +133,71 @@ app.layout = dbc.Container([
             ], style={"position": "relative"})
         ], width=8),
         
-        # Coluna Direita - Controles
-        dbc.Col([
-            dbc.Card([
-                dbc.CardHeader("Status da Partida"),
-                dbc.CardBody([
-                    html.Div([
-                        html.Div(id="player1-info", className="player-info player1 mb-2"),
-                        html.Div(id="player2-info", className="player-info player2 mb-4"),
-                    ], className="game-status mb-4"),
+    # Coluna Direita - Controles
+    dbc.Col([
+        dbc.Card([
+            dbc.CardHeader(html.H3("Status da Partida", className="text-center")),
+            dbc.CardBody([
+                # Indicador de Turno Atual
+                html.Div([
+                    html.Div(id="current-turn-indicator", className="turn-indicator")
+                ], className="mb-4"),
+                
+                # Status dos Jogadores
+                dbc.Row([
+                    # Jogador 1
+                    dbc.Col([
+                        html.Div([
+                            html.H4("Jogador 1", className="text-danger mb-2"),
+                            html.Div(id="player1-progress", className="progress-bar player1"),
+                            html.Div(id="player1-position", className="mt-2")
+                        ])
+                    ], width=6),
                     
-                    html.H4("Turno Atual", className="text-center mb-3"),
-                    html.Div(id="player-turn", className="current-turn mb-3"),
+                    # Jogador 2
+                    dbc.Col([
+                        html.Div([
+                            html.H4("Jogador 2", className="text-primary mb-2"),
+                            html.Div(id="player2-progress", className="progress-bar player2"),
+                            html.Div(id="player2-position", className="mt-2")
+                        ])
+                    ], width=6)
+                ], className="mb-4"),
+                
+                # Área dos Dados
+                html.Div([
+                    html.H4("Dados", className="text-center mb-3"),
                     html.Div([
-                        html.Div(id="player1-position", className="player-position"),
-                        html.Div(id="player2-position", className="player-position"),
-                    ], className="positions-display mb-4"),
-                    
-                    html.Div([
-                        html.Img(id="die1-image", src=create_dice_image(1), 
-                               style={"width": "80px", "height": "80px", "margin": "0 10px"}),
-                        html.Img(id="die2-image", src=create_dice_image(1), 
-                               style={"width": "80px", "height": "80px", "margin": "0 10px"}),
+                        html.Img(id="die1-image", className="dice",
+                                src=create_dice_image(1),
+                                style={"width": "80px", "height": "80px", "margin": "0 10px"}),
+                        html.Img(id="die2-image", className="dice",
+                                src=create_dice_image(1),
+                                style={"width": "80px", "height": "80px", "margin": "0 10px"}),
                     ], className="d-flex justify-content-center mb-4"),
-                    
-                    dbc.Button("Rolar Dados", id="roll-button", color="primary", 
-                             className="mb-3 w-100", size="lg"),
-                    dbc.Button("Novo Jogo", id="reset-button", color="secondary", 
-                             className="w-100"),
-                    
-                    html.Div(id="game-state", style={"display": "none"}),
-                    dcc.Store(id="dice-values", data={"die1": 1, "die2": 1}),
-                    dcc.Store(id="board-dimensions", data={"width": 564, "height": 564}),
-                ])
+                ]),
+                
+                # Botões de Ação
+                dbc.Button(
+                    html.Span([
+                        "🎲 Rolar Dados ",
+                        html.Small(id="dice-sum", className="ms-2")
+                    ]), 
+                    id="roll-button",
+                    color="primary",
+                    className="mb-3 w-100",
+                    size="lg"
+                ),
+                dbc.Button("🔄 Novo Jogo", id="reset-button", 
+                        color="secondary", className="w-100"),
+                
+                # Storage Components
+                html.Div(id="game-state", style={"display": "none"}),
+                dcc.Store(id="dice-values", data={"die1": 1, "die2": 1}),
+                dcc.Store(id="board-dimensions", data={"width": 564, "height": 564}),
             ])
-        ], width=4)
+        ])
+    ], width=4)
     ], className="mb-4"),
     
     # Seção de Regras
@@ -298,11 +262,13 @@ app.layout = dbc.Container([
      Output("die2-image", "src"),
      Output("game-message", "children"),
      Output("game-state", "children"),
-     Output("player-turn", "children"),
-     Output("player1-info", "children"),
-     Output("player2-info", "children"),
+     Output("current-turn-indicator", "children"),
+     Output("current-turn-indicator", "className"),
+     Output("player1-progress", "style"),
+     Output("player2-progress", "style"),
      Output("player1-position", "children"),
-     Output("player2-position", "children")],
+     Output("player2-position", "children"),
+     Output("dice-sum", "children")],
     [Input("roll-button", "n_clicks"),
      Input("reset-button", "n_clicks")],
     [State("dice-values", "data"),
@@ -316,16 +282,22 @@ def update_game(roll_clicks, reset_clicks, dice_data, game_state):
     if triggered_id == "reset-button" or game_state is None:
         game.__init__()
         return (
-            {"die1": 1, "die2": 1},
-            create_dice_image(1),
-            create_dice_image(1),
-            "Jogo começou! Turno do jogador 1.",
-            "active",
-            html.Div("Turno do jogador 1", style={"color": "red", "font-weight": "bold"}),
-            f"Player 1: Posição {positions[0]}",
-            f"Player 2: Posição {positions[1]}",
-            html.Div(f"P1: Posição {positions[0]}", style={"background": "rgba(255,0,0,0.2)"}),
-            html.Div(f"P2: Posição {positions[1]}", style={"background": "rgba(0,0,255,0.2)"}),
+            {"die1": 1, "die2": 1},  # dice-values
+            create_dice_image(1),     # die1-image
+            create_dice_image(1),     # die2-image
+            "Jogo começou! Turno do jogador 1.",  # game-message
+            "active",                 # game-state
+            html.Div([               # current-turn-indicator children
+                html.Img(src=create_player_token(0), 
+                        style={"width": "30px", "height": "30px"}),
+                html.Strong("Vez do Jogador 1")
+            ]),
+            "turn-indicator player1",  # current-turn-indicator className
+            {"width": "0%"},          # player1-progress style
+            {"width": "0%"},          # player2-progress style
+            "Posição: 0/100",         # player1-position
+            "Posição: 0/100",         # player2-position
+            ""                        # dice-sum
         )
     
     # Rola os dados
@@ -336,59 +308,72 @@ def update_game(roll_clicks, reset_clicks, dice_data, game_state):
         current_player = game.get_current_player() + 1
         positions = game.get_player_positions()
         
-        # Mensagem mais informativa
-        if "ladder" in result.lower():
-            message = html.Div([
-                html.Strong("ESCADA! 🪜 "), result
-            ], style={"color": "green", "font-size": "1.2em"})
-        elif "snake" in result.lower():
-            message = html.Div([
-                html.Strong("COBRAA! 🐍 "), result
-            ], style={"color": "red", "font-size": "1.2em"})
-        elif "wins" in result.lower():
-            message = html.Div([
-                html.Strong("🏆 VENCEDOR!!! "), result
-            ], style={"color": "gold", "font-size": "1.5em", "font-weight": "bold"})
-        else:
-            message = result
+        # Divide a mensagem em partes
+        message_parts = result.split(" | ")
         
-        player_turn_style = {
-            "color": "red" if current_player == 1 else "blue",
-            "font-weight": "bold"
-        }
+        # Cria mensagem formatada
+        message = html.Div([
+            # Dados e movimento básico
+            html.Div([
+                html.Strong(message_parts[0], style={"color": "#2c3e50"}),
+                html.Span(f" {message_parts[1]}")
+            ], style={"font-size": "1.2em", "margin-bottom": "8px"}),
+            
+            # Eventos especiais
+            *[html.Div(
+                part,
+                style={
+                    "color": "#e74c3c" if "Cobra" in part else
+                            "#27ae60" if "Escadinha" in part else
+                            "#f39c12" if "RICOCHETE" in part else
+                            "#3498db" if "Turno" in part else
+                            "#f1c40f" if "DADOS IGUAIS" in part else
+                            "#e67e22" if "VENCEU" in part else "inherit",
+                    "font-weight": "bold",
+                    "margin": "5px 0",
+                    "font-size": "1.1em"
+                }
+            ) for part in message_parts[2:]]
+        ], className="game-message")
         
         return (
-            {"die1": die1, "die2": die2},
-            create_dice_image(die1),
-            create_dice_image(die2),
-            message,  # Usando a mensagem formatada
-            "over" if "wins" in result.lower() else "active",
-            html.Div(f"Turno do jogador {current_player}", style=player_turn_style) 
-                if "wins" not in result.lower() else "",
-            f"Player 1: Posição {positions[0]}",
-            f"Player 2: Posição {positions[1]}",
-            html.Div(f"P1: Posição {positions[0]}", 
-                    style={"background": "rgba(255,0,0,0.2)", "padding": "5px", "border-radius": "5px"}),
-            html.Div(f"P2: Posição {positions[1]}", 
-                    style={"background": "rgba(0,0,255,0.2)", "padding": "5px", "border-radius": "5px"}),
+            {"die1": die1, "die2": die2},  # dice-values
+            create_dice_image(die1),        # die1-image
+            create_dice_image(die2),        # die2-image
+            message,                        # game-message
+            "over" if "wins" in result.lower() else "active",  # game-state
+            html.Div([                      # current-turn-indicator children
+                html.Img(src=create_player_token(current_player-1), 
+                        style={"width": "30px", "height": "30px"}),
+                html.Strong(f"Vez do Jogador {current_player}")
+            ]),
+            f"turn-indicator player{current_player}",  # current-turn-indicator className
+            {"width": f"{(positions[0])}%"},  # player1-progress style
+            {"width": f"{(positions[1])}%"},  # player2-progress style
+            f"Posição: {positions[0]}/100",   # player1-position
+            f"Posição: {positions[1]}/100",   # player2-position
+            f"({die1} + {die2} = {die1 + die2})"  # dice-sum
         )
     
     # Retorno padrão (estado atual do jogo)
     current_player = game.get_current_player() + 1
     return (
-        dice_data,
-        create_dice_image(dice_data["die1"]),
-        create_dice_image(dice_data["die2"]),
-        "Jogue os dados ou começe um novo jogo.",
-        game_state or "active",
-        html.Div(f"Turno do jogador {current_player}", 
-                style={"color": "red" if current_player == 1 else "blue", "font-weight": "bold"}),
-        f"Player 1: Posição {positions[0]}",
-        f"Player 2: Posição {positions[1]}",
-        html.Div(f"P1: Posição {positions[0]}", 
-                style={"background": "rgba(255,0,0,0.2)", "padding": "5px", "border-radius": "5px"}),
-        html.Div(f"P2: Posição {positions[1]}", 
-                style={"background": "rgba(0,0,255,0.2)", "padding": "5px", "border-radius": "5px"}),
+        dice_data,                    # dice-values
+        create_dice_image(dice_data.get("die1", 1)),  # die1-image
+        create_dice_image(dice_data.get("die2", 1)),  # die2-image
+        "Jogue os dados ou comece um novo jogo.",  # game-message
+        game_state or "active",       # game-state
+        html.Div([                    # current-turn-indicator children
+            html.Img(src=create_player_token(current_player-1), 
+                    style={"width": "30px", "height": "30px"}),
+            html.Strong(f"Vez do Jogador {current_player}")
+        ]),
+        f"turn-indicator player{current_player}",  # current-turn-indicator className
+        {"width": f"{positions[0]}%"},  # player1-progress style
+        {"width": f"{positions[1]}%"},  # player2-progress style
+        f"Posição: {positions[0]}/100", # player1-position
+        f"Posição: {positions[1]}/100", # player2-position
+        ""                             # dice-sum
     )
 
 # Callback para atualizar os tokens dos jogadores no tabuleiro

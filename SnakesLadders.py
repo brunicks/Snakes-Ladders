@@ -44,89 +44,63 @@ class SnakesLadders:
         }
     
     def play(self, die1, die2):
-        """
-        Processa o turno do jogador com os dados rolados.
-        
-        Args:
-            die1 (int): Primeiro dado (1-6)
-            die2 (int): Segundo dado (1-6)
-            
-        Returns:
-            str: Mensagem indicando o resultado do movimento
-        """
-        # Verifica se o jogo já acabou
+        """Processa o turno do jogador com os dados rolados."""
         if self.game_over:
             return "Jogo finalizado!"
         
-        # Obtém o número do jogador atual (1 ou 2)
         player_num = self.current_player + 1
-        
-        # Calcula o movimento total
         move = die1 + die2
-        
-        # Salva a posição anterior para histórico e mensagem
         old_position = self.player_positions[self.current_player]
-        
-        # Atualiza posição do jogador
         new_position = old_position + move
         
-        # Cria registro do movimento
-        move_record = {
-            "player": self.current_player,
-            "dice": (die1, die2),
-            "from": old_position,
-            "to": new_position,
-            "special": None
-        }
+        # Cria mensagem detalhada do movimento
+        message_parts = [
+            f"Jogador {player_num} rolou {die1}+{die2}={move}",
+            f"e andou de {old_position} para {new_position}"
+        ]
         
-        # Trata ricochete no final do tabuleiro
+        # Trata ricochete
         if new_position > 100:
-            new_position = 100 - (new_position - 100)
-            move_record["special"] = "bounce"
+            bounce_back = new_position - 100
+            new_position = 100 - bounce_back
+            message_parts.append(
+                f"RICOCHETE! Passou do 100 por {bounce_back} casas e voltou de 100 para {new_position}!"
+            )
         
         # Verifica cobras
-        snake_message = ""
         if new_position in self.snakes:
-            old_snake_position = new_position
+            old_snake_pos = new_position
             new_position = self.snakes[new_position]
-            snake_message = f" Opaa mermão! Cobra lazarenta em {old_snake_position} para {new_position}."
-            move_record["special"] = "snake"
-            move_record["snake_from"] = old_snake_position
+            message_parts.append(
+                f"Opaa mermão! Cobra lazarenta te pegou na casa {old_snake_pos}! Desceu até a casa {new_position}! 🐍"
+            )
         
         # Verifica escadas
-        ladder_message = ""
         if new_position in self.ladders:
-            old_ladder_position = new_position
+            old_ladder_pos = new_position
             new_position = self.ladders[new_position]
-            ladder_message = f" Boa malandrão! Escadinha top de {old_ladder_position} ate {new_position}."
-            move_record["special"] = "ladder"
-            move_record["ladder_from"] = old_ladder_position
+            message_parts.append(
+                f"Boa malandrão! Achou uma escadinha top na casa {old_ladder_pos}! Subiu direto pra casa {new_position}! 🪜"
+            )
         
-        # Atualiza posição do jogador
+        # Atualiza posição
         self.player_positions[self.current_player] = new_position
-        move_record["final"] = new_position
-        self.move_history.append(move_record)
         
-        # Verifica condição de vitória
+        # Verifica vitória
         if new_position == 100:
             self.game_over = True
-            return f"Jogador {player_num} venceu rolando: {die1}+{die2}!"
+            message_parts.append(f"🏆 VENCEDOR! Jogador {player_num} chegou na casa 100!")
+            return " | ".join(message_parts)
         
-        # Cria mensagem detalhada do movimento
-        move_message = f"Jogador {player_num} rolou {die1}+{die2}={move} e andou de {old_position} para {new_position}."
-        if snake_message:
-            move_message += snake_message
-        if ladder_message:
-            move_message += ladder_message
-        
-        # Determina próximo jogador - se os dados forem iguais, jogador ganha outra rodada
+        # Próximo turno
         if die1 != die2:
+            next_player = 2 if self.current_player == 0 else 1
+            message_parts.append(f"Agora é a vez do Jogador {next_player}! 🎲")
             self.current_player = 1 - self.current_player
-            move_message += f" Turno do jogador {self.current_player + 1}."
         else:
-            move_message += f" Rolou dupla! Jogador {player_num} ganha mais uma rodada."
+            message_parts.append(f"🎯 DADOS IGUAIS! Jogador {player_num} joga novamente!")
         
-        return move_message
+        return " | ".join(message_parts)
     
     def get_player_positions(self):
         """Retorna as posições atuais dos dois jogadores."""
